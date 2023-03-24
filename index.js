@@ -302,11 +302,7 @@ var App = /** @class */ (function () {
     };
     return App;
 }());
-var app = new App();
-window.onload = function () {
-    app.init();
-    app.getGoogleFonts('AIzaSyAOES8EmKhuJEnsn9kS1XKBpxxp-TgN8Jc');
-};
+
 /**
  * Creates and returns a new debounced version of the passed function that will
  * postpone its execution until after wait milliseconds have elapsed since the last time it was invoked.
