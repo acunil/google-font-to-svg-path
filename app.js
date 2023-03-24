@@ -10,11 +10,33 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.post('/generateSVGPath', async (req, res) => {
-    const { text, size, fill, stroke } = req.body;
+    const { text, size, fill, stroke, font } = req.body;
     const fontSize = size || 72;
     const fillColor = fill || 'black';
     const strokeColor = stroke || 'none';
-    const fontPath = path.join(__dirname, 'fonts', 'ChivoMono-Regular.ttf');
+    var fontChoice = '';
+    
+    if (font == "elron") {
+        // nice, bit spaced out
+        fontChoice = "Elronmonospace.ttf";
+    } else if (font == "julia") {
+        // clean, kinda blocky
+        fontChoice = "JuliaMono-Regular.ttf";
+    } else if (font == "vera") {
+        // good, square dots on ij, dot in 0
+        fontChoice = "VeraMono.ttf";
+    } else if (font == "noto") {
+        // only good for lower case
+        fontChoice = "NotoSansMono-Regular.ttf";
+    } else if (font == "roboto") {
+        // nice, slash in 0
+        fontChoice = "RobotoMono-Regular.ttf";
+    } else if (font == "ubuntu") {
+        // nice, weird r, dot in 0
+        fontChoice = "UbuntuMono-Regular.ttf";
+    }
+
+    const fontPath = path.join(__dirname, 'fonts', fontChoice);
   
     try {
       const font = await opentype.load(fontPath);
