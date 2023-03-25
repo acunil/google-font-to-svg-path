@@ -10,10 +10,9 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.post('/generateSVGPath', async (req, res) => {
-    const { text, size, fill, stroke, font } = req.body;
+    const { text, size, fill, font } = req.body;
     const fontSize = size || 72;
     const fillColor = fill || 'black';
-    const strokeColor = stroke || 'none';
     var fontChoice = '';
     
     if (font == "elron") {
@@ -34,6 +33,12 @@ app.post('/generateSVGPath', async (req, res) => {
     } else if (font == "ubuntu") {
         // nice, weird r, dot in 0
         fontChoice = "UbuntuMono-Regular.ttf";
+    } else if (font == "monofonto") {
+        // beautiful hex, m is a little squashed
+        fontChoice = "monofonto rg.otf";
+    } else if (font == "museum") {
+        // perfect
+        fontChoice = "LTMuseum-Reg.ttf";
     }
 
     const fontPath = path.join(__dirname, 'fonts', fontChoice);
@@ -44,13 +49,13 @@ app.post('/generateSVGPath', async (req, res) => {
       const svgPath = path.toSVG();
       const bbox = path.getBoundingBox();
   
-      const width = bbox.x2 - bbox.x1;
-      const height = bbox.y2 - bbox.y1;
-      const viewBox = `${bbox.x1} ${bbox.y1} ${width} ${height}`;
+      const width = (bbox.x2 - bbox.x1).toFixed(2);
+      const height = (bbox.y2 - bbox.y1).toFixed(2);
+      const viewBox = `${bbox.x1.toFixed(2)} ${bbox.y1.toFixed(2)} ${width} ${height}`;
   
       const svg = `
         <svg width="${width}" height="${height}" viewBox="${viewBox}" xmlns="http://www.w3.org/2000/svg">
-          <g id="svgGroup" stroke-linecap="round" fill-rule="evenodd" font-size="${fontSize}" stroke="${strokeColor}" stroke-width="0.0mm" fill="${fillColor}" style="stroke:${strokeColor};stroke-width:0.25mm;fill:${fillColor}">
+          <g id="svgGroup" stroke-linecap="round" fill-rule="evenodd" font-size="${fontSize}" stroke="none" fill="${fillColor}">
             ${svgPath}
           </g>
         </svg>
