@@ -1,4 +1,3 @@
-# google-font-to-svg-path
-Create an SVG path from a Google font
+# Run
 
-https://danmarshall.github.io/google-font-to-svg-path
+`npm run start-api`
