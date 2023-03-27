@@ -9,42 +9,36 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+function getTallestCharacter (text) {
+    let tallestCharacter = '';
+    if (text.includes('f')) {
+      tallestCharacter = 'f';
+    } else if (text.includes('b') || text.includes('d') || text.includes('h') || text.includes('k') || text.includes('l')) {
+      tallestCharacter = 'b';
+    } else if (text.includes('i') || text.includes('j')) {
+      tallestCharacter = 'i';
+    } else if (text.includes('t')) {
+      tallestCharacter = 't';
+    } else {
+      tallestCharacter = 'a';
+    }
+    return tallestCharacter;
+}
+
 app.post('/generateSVGPath', async (req, res) => {
-    const { text, size, fill, font } = req.body;
+    const { text, size, fill } = req.body;
     const fontSize = size || 72;
     const fillColor = fill || 'black';
-    var fontChoice = '';
-    
-    if (font == "elron") {
-        // nice, bit spaced out
-        fontChoice = "Elronmonospace.ttf";
-    } else if (font == "julia") {
-        // clean, kinda blocky
-        fontChoice = "JuliaMono-Regular.ttf";
-    } else if (font == "vera") {
-        // good, square dots on ij, dot in 0
-        fontChoice = "VeraMono.ttf";
-    } else if (font == "noto") {
-        // only good for lower case
-        fontChoice = "NotoSansMono-Regular.ttf";
-    } else if (font == "roboto") {
-        // nice, slash in 0
-        fontChoice = "RobotoMono-Regular.ttf";
-    } else if (font == "ubuntu") {
-        // nice, weird r, dot in 0
-        fontChoice = "UbuntuMono-Regular.ttf";
-    } else if (font == "monofonto") {
-        // beautiful hex, m is a little squashed
-        fontChoice = "monofonto rg.otf";
-    } else if (font == "museum") {
-        // perfect
-        fontChoice = "LTMuseum-Reg.ttf";
-    }
-
-    const fontPath = path.join(__dirname, 'fonts', fontChoice);
+    const fontPath = path.join(__dirname, 'fonts', 'LTMuseum-Reg.ttf');
   
     try {
       const font = await opentype.load(fontPath);
+
+      const tallestCharacter = getTallestCharacter(text);
+      const tallestCharacterPath = font.getPath(tallestCharacter, 0, 0, fontSize);
+      const tallestCharacterBbox = tallestCharacterPath.getBoundingBox();
+      const tallestCharacterHeight = (tallestCharacterBbox.y2 - tallestCharacterBbox.y1).toFixed(2);
+
       const path = font.getPath(text, 0, 0, fontSize);
       const svgPath = path.toSVG();
       const bbox = path.getBoundingBox();
@@ -61,7 +55,7 @@ app.post('/generateSVGPath', async (req, res) => {
         </svg>
       `;
   
-      res.status(200).send(svg);
+      res.status(200).send({ tallestCharacter, tallestCharacterHeight, svg });
     } catch (error) {
       console.error(error);
       res.status(500).json({ error: error.message });
