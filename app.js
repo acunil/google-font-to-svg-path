@@ -10,64 +10,48 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.post('/generateSVGPath', async (req, res) => {
-    const { text, size, fill, font } = req.body;
+    const { text, size, fill } = req.body;
     const fontSize = size || 72;
     const fillColor = fill || 'black';
-    var fontChoice = '';
-    
-    if (font == "elron") {
-        // nice, bit spaced out
-        fontChoice = "Elronmonospace.ttf";
-    } else if (font == "julia") {
-        // clean, kinda blocky
-        fontChoice = "JuliaMono-Regular.ttf";
-    } else if (font == "vera") {
-        // good, square dots on ij, dot in 0
-        fontChoice = "VeraMono.ttf";
-    } else if (font == "noto") {
-        // only good for lower case
-        fontChoice = "NotoSansMono-Regular.ttf";
-    } else if (font == "roboto") {
-        // nice, slash in 0
-        fontChoice = "RobotoMono-Regular.ttf";
-    } else if (font == "ubuntu") {
-        // nice, weird r, dot in 0
-        fontChoice = "UbuntuMono-Regular.ttf";
-    } else if (font == "monofonto") {
-        // beautiful hex, m is a little squashed
-        fontChoice = "monofonto rg.otf";
-    } else if (font == "museum") {
-        // perfect
-        fontChoice = "LTMuseum-Reg.ttf";
-    }
-
-    const fontPath = path.join(__dirname, 'fonts', fontChoice);
+    const fontPath = path.join(__dirname, 'fonts', 'LTMuseum-Reg.ttf');
   
     try {
       const font = await opentype.load(fontPath);
-      const path = font.getPath(text, 0, 0, fontSize);
-      const svgPath = path.toSVG();
-      const bbox = path.getBoundingBox();
-  
-      const width = (bbox.x2 - bbox.x1).toFixed(2);
-      const height = (bbox.y2 - bbox.y1).toFixed(2);
-      const viewBox = `${bbox.x1.toFixed(2)} ${bbox.y1.toFixed(2)} ${width} ${height}`;
-  
-      const svg = `
-        <svg width="${width}" height="${height}" viewBox="${viewBox}" xmlns="http://www.w3.org/2000/svg">
-          <g id="svgGroup" stroke-linecap="round" fill-rule="evenodd" font-size="${fontSize}" stroke="none" fill="${fillColor}">
-            ${svgPath}
-          </g>
-        </svg>
-      `;
-  
+
+      const lines = text.split("\\n");
+      const lineHeight = fontSize * 1.2;
+      const pathsData = lines.map((line) => {
+        const path = font.getPath(line, 0, 0, fontSize);
+        const pathSVG = path.toSVG();
+        return pathSVG.slice(10, -3); // Remove <path d= and />
+      });
+
+      const viewBoxWidth = Math.max(...pathsData.map((pathData) => getPathWidth(pathData)));
+      const viewBoxHeight = lineHeight * lines.length;
+
+      const centeredPathsData = pathsData.map((pathData, index) => {
+        const offsetX = (viewBoxWidth - getPathWidth(pathData)) / 2;
+        const offsetY = lineHeight * index + fontSize;
+        return `<path transform="translate(${offsetX}, ${offsetY})" d="${pathData}" fill="${fillColor}" />`;
+      });
+
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${viewBoxWidth} ${viewBoxHeight}">${centeredPathsData.join(
+        ""
+      )}</svg>`;
+
       res.status(200).send(svg);
     } catch (error) {
       console.error(error);
       res.status(500).json({ error: error.message });
     }
-  });
-  
+});
+
+function getPathWidth(pathData) {
+  const coordinates = pathData.match(/-?[\d.]+(?:e-?\d+)?/g).map(Number);
+  const xCoordinates = coordinates.filter((_, index) => index % 2 === 0);
+  const pathWidth = Math.max(...xCoordinates) - Math.min(...xCoordinates)
+  return pathWidth;
+}
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
