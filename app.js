@@ -19,6 +19,8 @@ function getTallestCharacter (text) {
       tallestCharacter = 'i';
     } else if (text.includes('t')) {
       tallestCharacter = 't';
+    } else if (text.includes('o') || text.includes('p') || text.includes('q') || text.includes('r') || text.includes('s')) {
+      tallestCharacter = 't';
     } else {
       tallestCharacter = 'a';
     }
