@@ -41,6 +41,14 @@ app.post('/generateSVGPath', async (req, res) => {
       const tallestCharacterBbox = tallestCharacterPath.getBoundingBox();
       const tallestCharacterHeight = (tallestCharacterBbox.y2 - tallestCharacterBbox.y1).toFixed(2);
 
+      var controlCharacterHeight = tallestCharacterHeight;
+      if (tallestCharacter != 'a') {
+        const controlCharacter = 'a';
+        const controlCharacterPath = font.getPath(controlCharacter, 0, 0, fontSize);
+        const controlCharacterBbox = controlCharacterPath.getBoundingBox();
+        controlCharacterHeight = (controlCharacterBbox.y2 - controlCharacterBbox.y1).toFixed(2);
+      }
+
       const path = font.getPath(text, 0, 0, fontSize);
       const svgPath = path.toSVG();
       const bbox = path.getBoundingBox();
@@ -57,7 +65,7 @@ app.post('/generateSVGPath', async (req, res) => {
         </svg>
       `;
   
-      res.status(200).send({ tallestCharacter, tallestCharacterHeight, svg });
+      res.status(200).send({ tallestCharacter, tallestCharacterHeight, controlCharacterHeight, svg });
     } catch (error) {
       console.error(error);
       res.status(500).json({ error: error.message });
