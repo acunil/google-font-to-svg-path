@@ -9,46 +9,132 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-function getTallestCharacter (text) {
-    let tallestCharacter = '';
-    if (text.includes('f')) {
-      tallestCharacter = 'f';
-    } else if (text.includes('b') || text.includes('d') || text.includes('h') || text.includes('k') || text.includes('l')) {
-      tallestCharacter = 'b';
-    } else if (text.includes('i') || text.includes('j')) {
-      tallestCharacter = 'i';
-    } else if (text.includes('t')) {
-      tallestCharacter = 't';
-    } else if (text.includes('o') || text.includes('p') || text.includes('q') || text.includes('r') || text.includes('s')) {
-      tallestCharacter = 's';
-    } else {
-      tallestCharacter = 'a';
+function getHeightOfTallestAndControlCharacter (text, font, fontSize) {
+
+  let noSpaces = text.match(/[a-zA-Z0-9]/g)
+  if (!noSpaces) {
+    throw new Error(`The input string does not contain any valid characters: "${text}"`);
+  }
+
+  let uniqueChars = new Set(noSpaces);
+
+  let tallestCharacterHeight = 0;
+  let tallestCharacter = '';
+
+  uniqueChars.forEach(char => {
+    let characterPath = font.getPath(char, 0, 0, fontSize);
+    let characterBbox = characterPath.getBoundingBox();
+    let characterHeight = (characterBbox.y2 - characterBbox.y1).toFixed(2);
+    if (characterHeight > tallestCharacterHeight) {
+      tallestCharacterHeight = characterHeight;
+      tallestCharacter = char;
     }
-    return tallestCharacter;
+  });
+
+  let controlCharacter = 'c';
+  let controlPath = font.getPath(controlCharacter, 0, 0, fontSize);
+  let controlBbox = controlPath.getBoundingBox();
+  let controlCharacterHeight = (controlBbox.y2 - controlBbox.y1).toFixed(2);
+
+  return { tallestCharacterHeight, tallestCharacter , controlCharacterHeight };
+}
+
+function getFontDirectoryLocationFromNumber(fontNum) {
+    var fontSelection = 'LTMuseum-Reg.ttf';
+    switch (fontNum) {
+      case 1:
+        fontSelection = 'VeraMono.ttf'
+        break;
+      case 2:
+        fontSelection = 'Elementary_Gothic_Bookhand.ttf'; // rare
+        break;
+      case 3:
+        fontSelection = 'Elronmonospace.ttf';
+        break;
+      case 4:
+        fontSelection = 'JuliaMono-Regular.ttf';
+        break;
+      case 5:
+        fontSelection = 'LinLibertine_R.ttf';
+        break;
+      case 6:
+        fontSelection = 'RobotoMono-Regular.ttf';
+        break;
+      case 7:
+        fontSelection = 'UbuntuMono-Regular.ttf';
+        break;
+      case 8:
+        fontSelection = 'VeraMono.ttf';
+        break;
+      case 9:
+        fontSelection = 'Deutsch.ttf'; // rare
+        break;
+      case 10:
+        fontSelection = 'Augusta.ttf'; // rare
+        break;
+      case 11:
+        fontSelection = 'Augusta-Shadow.ttf'; // rare
+        break;
+      case 12:
+        fontSelection = 'LT Funk.otf';
+        break;
+      case 13:
+        fontSelection = 'F25_Executive.otf';
+        break;
+      case 14:
+        fontSelection = 'Foglihten-068.otf';
+        break;
+      case 15:
+        fontSelection = 'ahellya.ttf';
+        break;
+      case 16:
+        fontSelection = 'LTRemark-May2021.otf';
+        break;
+      case 17:
+        fontSelection = 'Neuton-Light.ttf';
+        break;
+      case 18:
+        fontSelection = 'Cheboyga.ttf'; // uncommon
+        break;
+      case 19:
+        fontSelection = 'Handwriting.ttf'; // uncommon
+        break;
+      case 20:
+        fontSelection = 'KH-Blackline-Script-Medium.ttf'; // rare
+        break;
+      case 21:
+        fontSelection = 'Frenchpress freefont.otf';
+        break;
+      case 22:
+        fontSelection = 'Klepon-Ijo.ttf';
+        break;
+      case 23:
+        fontSelection = 'LondrinaShadow-Regular.otf'; // rare
+        break;
+      case 24:
+        fontSelection = 'LondrinaSolid-Regular.otf'; // uncommon
+        break;
+      case 25:
+        fontSelection = 'Dimbo Regular.ttf';
+        break;
+      case 26:
+        fontSelection = 'Aquifer.ttf'; // uncommon
+        break;
+      
+    }
+    const fontDirectoryLocation = path.join(__dirname, 'fonts', fontSelection);
+
+    return fontDirectoryLocation;
 }
 
 app.post('/generateSVGPath', async (req, res) => {
-    const { text, size, fill } = req.body;
+    const { text, size, fill, fontNum } = req.body;
     const fontSize = size || 72;
     const fillColor = fill || 'black';
-    const fontPath = path.join(__dirname, 'fonts', 'LTMuseum-Reg.ttf');
+    const fontDirectoryLocation = getFontDirectoryLocationFromNumber(fontNum);
   
     try {
-      const font = await opentype.load(fontPath);
-
-      const tallestCharacter = getTallestCharacter(text);
-      const tallestCharacterPath = font.getPath(tallestCharacter, 0, 0, fontSize);
-      const tallestCharacterBbox = tallestCharacterPath.getBoundingBox();
-      const tallestCharacterHeight = (tallestCharacterBbox.y2 - tallestCharacterBbox.y1).toFixed(2);
-
-      var controlCharacterHeight = tallestCharacterHeight;
-      if (tallestCharacter != 'a') {
-        const controlCharacter = 'a';
-        const controlCharacterPath = font.getPath(controlCharacter, 0, 0, fontSize);
-        const controlCharacterBbox = controlCharacterPath.getBoundingBox();
-        controlCharacterHeight = (controlCharacterBbox.y2 - controlCharacterBbox.y1).toFixed(2);
-      }
-
+      const font = await opentype.load(fontDirectoryLocation);
       const path = font.getPath(text, 0, 0, fontSize);
       const svgPath = path.toSVG();
       const bbox = path.getBoundingBox();
@@ -64,8 +150,14 @@ app.post('/generateSVGPath', async (req, res) => {
           </g>
         </svg>
       `;
-  
-      res.status(200).send({ tallestCharacter, tallestCharacterHeight, controlCharacterHeight, svg });
+      const { tallestCharacter, tallestCharacterHeight, controlCharacterHeight } = getHeightOfTallestAndControlCharacter(text, font, fontSize);
+      
+      // use for e2e
+      // res.status(200).send({ tallestCharacter, tallestCharacterHeight, controlCharacterHeight, svg });
+
+      // use for postman
+      res.status(200).send(svg);
+
     } catch (error) {
       console.error(error);
       res.status(500).json({ error: error.message });
