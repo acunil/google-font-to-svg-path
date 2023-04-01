@@ -120,6 +120,45 @@ function getFontDirectoryLocationFromNumber(fontNum) {
       case 26:
         fontSelection = 'Aquifer.ttf'; // uncommon
         break;
+      case 27:
+        fontSelection = 'Acidic.TTF' // rare
+        break;
+      case 28:
+        fontSelection = 'alagard.ttf'; // uncommon
+        break;
+      case 29:
+        fontSelection = 'Alkhemikal.ttf'; // uncommon
+        break;
+      case 30:
+        fontSelection = 'Code.ttf'; // rare bit broken at small font size
+        break;
+      case 31:
+        fontSelection = 'DigitalDisco-Thin.ttf'; // uncommon
+        break;
+      case 32:
+        fontSelection = 'DigitalDisco.ttf'; // uncommon
+        break;
+      case 33:
+        fontSelection = 'ERTHQAKE.TTF'; // rare
+        break;
+      case 34:
+        fontSelection = 'Fluox___.ttf'; // v rare
+        break;
+      case 35:
+        fontSelection = 'FRAZZLE_.TTF'; // rare
+        break;
+      case 36:
+        fontSelection = 'Perfect DOS VGA 437 Win.ttf';
+        break;
+      case 37:
+        fontSelection = 'runescape_uf.ttf';
+        break;
+      case 38:
+        fontSelection = 'vademecum.otf'; // uncommon
+        break;
+      case 39:
+        fontSelection = 'VCR_OSD_MONO_1.001.ttf';
+        break;
       
     }
     const fontDirectoryLocation = path.join(__dirname, 'fonts', fontSelection);
@@ -153,10 +192,10 @@ app.post('/generateSVGPath', async (req, res) => {
       const { tallestCharacter, tallestCharacterHeight, controlCharacterHeight } = getHeightOfTallestAndControlCharacter(text, font, fontSize);
       
       // use for e2e
-      // res.status(200).send({ tallestCharacter, tallestCharacterHeight, controlCharacterHeight, svg });
+      res.status(200).send({ tallestCharacter, tallestCharacterHeight, controlCharacterHeight, svg });
 
       // use for postman
-      res.status(200).send(svg);
+      // res.status(200).send(svg);
 
     } catch (error) {
       console.error(error);
